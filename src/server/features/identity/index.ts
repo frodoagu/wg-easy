@@ -257,6 +257,11 @@ export async function completeSecondFactor(
   });
 }
 
+export function listUsers(actor: Actor) {
+  authorize(actor, 'admin', 'any');
+  return getDatabase().users.list();
+}
+
 export async function updateProfile(
   actor: Actor,
   name: string,

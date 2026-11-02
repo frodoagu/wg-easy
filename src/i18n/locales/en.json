@@ -325,8 +325,15 @@
           "expired": "Expired"
         }
       },
+      "user": {
+        "label": "User",
+        "options": {
+          "all": "All users"
+        }
+      },
       "clear": "Clear filters"
-    }
+    },
+    "owner": "Owner"
   },
   "admin": {
     "title": "Admin Panel",

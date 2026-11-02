@@ -14,6 +14,7 @@ type ClientListQuery = {
   filter?: string;
   status: ClientStatusFilter;
   expiry: ClientExpiryFilter;
+  userId?: number;
   sortOrder: ClientSortOrder;
   page: number;
   pageSize: number;
@@ -37,7 +38,8 @@ export const useClientsStore = defineStore('Clients', () => {
     () =>
       Boolean(query.value.filter) ||
       query.value.status !== 'all' ||
-      query.value.expiry !== 'all'
+      query.value.expiry !== 'all' ||
+      query.value.userId !== undefined
   );
   const searchParams = computed(() => {
     const { sortOrder, ...params } = query.value;
@@ -179,7 +181,12 @@ export const useClientsStore = defineStore('Clients', () => {
   }
 
   function clearFilters() {
-    return updateQuery({ filter: undefined, status: 'all', expiry: 'all' });
+    return updateQuery({
+      filter: undefined,
+      status: 'all',
+      expiry: 'all',
+      userId: undefined,
+    });
   }
 
   async function applyBulkAction(action: ClientBulkAction) {

@@ -71,6 +71,7 @@ export const ClientQuerySchema = z.object({
   status: z.enum(clientStatusFilters).optional(),
   expiry: z.enum(clientExpiryFilters).optional(),
   sortBy: z.enum(clientSortFields).optional(),
+  userId: z.coerce.number().int().min(1).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });

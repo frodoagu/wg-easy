@@ -26,6 +26,13 @@ export class UserRepository {
     });
   }
 
+  async list() {
+    return this.db.query.user.findMany({
+      columns: { id: true, name: true, username: true },
+      orderBy: (t, { asc }) => [asc(t.name), asc(t.id)],
+    });
+  }
+
   async count() {
     return this.db.$count(user);
   }

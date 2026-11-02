@@ -137,6 +137,27 @@ describe('paginated client API', () => {
     });
   });
 
+  test('lets administrators filter by owner and shows each owner', async () => {
+    const result = await request('?userId=2&pageSize=100');
+    expect(result.total).toBe(35);
+    expect(
+      result.clients.every(
+        (client) =>
+          client.userId === 2 &&
+          client.user?.name === 'User 2' &&
+          client.user.username === 'user-2'
+      )
+    ).toBe(true);
+    expect(result.clients[0]?.user).not.toHaveProperty('password');
+  });
+
+  test('ignores the owner filter for other users', async () => {
+    getCurrentUser.mockResolvedValue({ id: 2, role: 2 });
+    const result = await request('?userId=1&pageSize=100');
+    expect(result.total).toBe(35);
+    expect(result.clients.every((client) => client.userId === 2)).toBe(true);
+  });
+
   test('filters and sorts the full matching set before applying the page boundary', async () => {
     const result = await request(
       '?filter=client%200&sort=desc&page=2&pageSize=10'

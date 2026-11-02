@@ -38,6 +38,16 @@
             <ClientCardLastSeen :client="client" />
             <span aria-hidden="true">·</span>
             <ClientCardExpireDate :client="client" />
+            <template v-if="isAdmin && client.user">
+              <span aria-hidden="true">·</span>
+              <span
+                class="inline-flex items-center gap-1"
+                :title="$t('clients.owner')"
+              >
+                <UserIcon class="size-3" aria-hidden="true" />
+                {{ client.user.name || client.user.username }}
+              </span>
+            </template>
           </div>
         </div>
       </div>
@@ -68,8 +78,15 @@
 </template>
 
 <script setup lang="ts">
+import { UserIcon } from '@lucide/vue';
+
 const props = defineProps<{ client: LocalClient; selected?: boolean }>();
 const globalStore = useGlobalStore();
+const authStore = useAuthStore();
+const isAdmin = computed(
+  () =>
+    !!authStore.userData && hasPermissions(authStore.userData, 'admin', 'any')
+);
 const now = useHydrationTime();
 const connected = computed(
   () =>

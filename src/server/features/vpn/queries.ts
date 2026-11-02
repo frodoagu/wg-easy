@@ -23,7 +23,7 @@ export async function list(actor: Actor, query: ClientQueryType) {
       : [];
   const result = await getDatabase().clients.getPage(
     query,
-    actor.role === roles.ADMIN ? undefined : actor.id,
+    actor.role === roles.ADMIN ? query.userId : actor.id,
     onlineKeys,
     timestamp
   );

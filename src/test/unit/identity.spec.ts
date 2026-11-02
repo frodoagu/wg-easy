@@ -356,6 +356,16 @@ describe('identity', () => {
     expect(await store.users.count()).toBe(1);
   });
 
+  test('lists users without credentials for administrators only', async () => {
+    await fixture();
+    expect(await identity.listUsers(actor)).toEqual([
+      { id: 1, name: 'Admin', username: 'admin' },
+    ]);
+    expect(() => identity.listUsers({ id: 2, role: roles.CLIENT })).toThrow(
+      expect.objectContaining({ status: 403 })
+    );
+  });
+
   test('prevents unlinking the only login method and conflicting OAuth ownership', async () => {
     const { store } = await fixture();
     await identity.linkOauth(actor, 'oidc', 'subject');

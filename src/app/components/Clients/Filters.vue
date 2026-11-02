@@ -14,6 +14,18 @@
       class="sm:w-48"
       @update:model-value="clientsStore.updateQuery({ expiry: $event })"
     />
+    <ClientsSelect
+      v-if="isAdmin"
+      :model-value="String(clientsStore.query.userId ?? 'all')"
+      :label="$t('clients.filters.user.label')"
+      :options="userOptions"
+      class="sm:w-48"
+      @update:model-value="
+        clientsStore.updateQuery({
+          userId: $event === 'all' ? undefined : Number($event),
+        })
+      "
+    />
     <ClientsSort class="col-span-2 sm:ml-auto sm:w-56" />
   </div>
 </template>
@@ -25,7 +37,23 @@ import {
 } from '#shared/utils/clientList';
 
 const clientsStore = useClientsStore();
+const authStore = useAuthStore();
 const { t } = useI18n();
+const isAdmin = computed(
+  () =>
+    !!authStore.userData && hasPermissions(authStore.userData, 'admin', 'any')
+);
+const { data: users } = useFetch('/api/admin/users', {
+  method: 'get',
+  immediate: isAdmin.value,
+});
+const userOptions = computed(() => [
+  { value: 'all', label: t('clients.filters.user.options.all') },
+  ...(users.value ?? []).map((user) => ({
+    value: String(user.id),
+    label: user.name || user.username,
+  })),
+]);
 const statusOptions = computed(() =>
   clientStatusFilters.map((value) => ({
     value,

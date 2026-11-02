@@ -119,7 +119,10 @@ export class ClientRepository {
       );
       const result = await tx.query.client.findMany({
         where,
-        with: { oneTimeLink: true },
+        with: {
+          oneTimeLink: true,
+          user: { columns: { id: true, name: true, username: true } },
+        },
         columns: publicColumns,
         orderBy: (t, { asc, desc }) => {
           const order = query.sort === 'desc' ? desc : asc;

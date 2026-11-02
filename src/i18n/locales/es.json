@@ -198,7 +198,16 @@
       "title": "Hooks",
       "description": "Los hooks solo funcionan con wg-quick",
       "fieldDescription": "Solo para wg-quick. En caso contrario, dejar vacío"
-    }
+    },
+    "filters": {
+      "user": {
+        "label": "Usuario",
+        "options": {
+          "all": "Todos los usuarios"
+        }
+      }
+    },
+    "owner": "Propietario"
   },
   "admin": {
     "title": "Panel de Admin.",
