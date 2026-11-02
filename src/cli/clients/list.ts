@@ -17,6 +17,7 @@ export default defineCommand({
         publicKey: true,
         enabled: true,
       },
+      with: { user: { columns: { username: true } } },
     });
 
     if (clients.length === 0) {
@@ -24,6 +25,11 @@ export default defineCommand({
       return;
     }
 
-    console.table(clients);
+    console.table(
+      clients.map(({ user, ...client }) => ({
+        ...client,
+        owner: user.username,
+      }))
+    );
   },
 });

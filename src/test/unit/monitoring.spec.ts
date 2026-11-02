@@ -4,6 +4,8 @@ import { vpnFixture } from '../helpers/vpn';
 import { resetCryptoMocks } from '../helpers/crypto';
 import { requestEvent } from '../helpers/request';
 
+import * as schema from '#db/schema';
+import { roles } from '#shared/utils/permissions';
 import jsonMetrics from '#server/routes/metrics/json.get';
 import prometheusMetrics from '#server/routes/metrics/prometheus.get';
 
@@ -19,13 +21,22 @@ async function fixture() {
 }
 
 test('uses the same counts and peer status for both monitoring formats', async () => {
-  const { store, commands } = await fixture();
+  const { db, store, commands } = await fixture();
   const now = 1_800_000_000_000;
   vi.spyOn(Date, 'now').mockReturnValue(now);
+  await db.insert(schema.user).values({
+    id: 2,
+    username: 'bob',
+    name: '',
+    role: roles.CLIENT,
+    enabled: true,
+    totpVerified: false,
+  });
   await store.clients.update(1, { name: 'home\\office\n"peer"' });
   await store.clients.insert({
     ...(await store.clients.get(1))!,
     id: 2,
+    userId: 2,
     name: 'Offline',
     enabled: false,
     publicKey: 'offline',
@@ -56,6 +67,8 @@ test('uses the same counts and peer status for both monitoring formats', async (
   expect(
     json.clients.find((client) => client.publicKey === 'public')
   ).toMatchObject({
+    owner: 'admin',
+    ownerName: 'Admin',
     transferRx: 12,
     transferTx: 34,
     endpoint: '192.0.2.1:50000',
@@ -63,6 +76,8 @@ test('uses the same counts and peer status for both monitoring formats', async (
   expect(
     json.clients.find((client) => client.publicKey === 'offline')
   ).toMatchObject({
+    owner: 'bob',
+    ownerName: 'bob',
     latestHandshakeAt: null,
     transferRx: null,
     transferTx: null,
@@ -79,9 +94,14 @@ test('uses the same counts and peer status for both monitoring formats', async (
   expect(text).toContain('wireguard_enabled_peers{interface="wg0"} 1');
   expect(text).toContain('wireguard_connected_peers{interface="wg0"} 1');
   expect(text).toContain(String.raw`name="home\\office\n\"peer\""`);
-  expect(text).toMatch(/wireguard_sent_bytes\{[^\n]+owner="Admin"\} 34/);
   expect(text).toMatch(
-    /wireguard_peer_endpoint_info\{[^\n]+ipv4Address="10.8.0.2",[^\n]+owner="Admin"/
+    /wireguard_sent_bytes\{[^\n]+owner="admin",ownerName="Admin"\} 34/
+  );
+  expect(text).toMatch(
+    /wireguard_sent_bytes\{[^\n]+name="Offline",owner="bob",ownerName="bob"\} 0/
+  );
+  expect(text).toMatch(
+    /wireguard_peer_endpoint_info\{[^\n]+ipv4Address="10.8.0.2",[^\n]+owner="admin",ownerName="Admin"/
   );
   expect(text).toMatch(/wireguard_sent_bytes\{[^\n]+\} 34/);
   expect(text).toMatch(/wireguard_received_bytes\{[^\n]+\} 12/);

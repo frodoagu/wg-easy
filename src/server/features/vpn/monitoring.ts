@@ -25,12 +25,21 @@ async function read() {
   };
 }
 
+/**
+ * `owner` is the username, which never changes and cannot be chosen by
+ * another user; `ownerName` is the editable display name.
+ */
+function owner(user: { username: string; name: string }) {
+  return { owner: user.username, ownerName: user.name || user.username };
+}
+
 export async function json() {
   const { clients, counts } = await read();
   return {
     ...counts,
     clients: clients.map((client) => ({
       name: client.name,
+      ...owner(client.user),
       enabled: client.enabled,
       ipv4Address: client.ipv4Address,
       ipv6Address: client.ipv6Address,
@@ -56,7 +65,7 @@ export async function prometheus() {
       ipv4Address: client.ipv4Address,
       ipv6Address: client.ipv6Address,
       name: client.name,
-      owner: client.user.name,
+      ...owner(client.user),
     });
 
     wireguardSentBytes.push(
@@ -74,7 +83,7 @@ export async function prometheus() {
         interface: interfaceName,
         ipv4Address: client.ipv4Address,
         name: client.name,
-        owner: client.user.name,
+        ...owner(client.user),
         endpoint: client.endpoint,
       });
       wireguardEndpointInfo.push(
