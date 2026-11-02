@@ -79,11 +79,15 @@ test('uses the same counts and peer status for both monitoring formats', async (
   expect(text).toContain('wireguard_enabled_peers{interface="wg0"} 1');
   expect(text).toContain('wireguard_connected_peers{interface="wg0"} 1');
   expect(text).toContain(String.raw`name="home\\office\n\"peer\""`);
+  expect(text).toMatch(/wireguard_sent_bytes\{[^\n]+owner="Admin"\} 34/);
+  expect(text).toMatch(
+    /wireguard_peer_endpoint_info\{[^\n]+ipv4Address="10.8.0.2",[^\n]+owner="Admin"/
+  );
   expect(text).toMatch(/wireguard_sent_bytes\{[^\n]+\} 34/);
   expect(text).toMatch(/wireguard_received_bytes\{[^\n]+\} 12/);
   expect(text).toMatch(/wireguard_latest_handshake_seconds\{[^\n]+\} 30/);
   expect(text).toMatch(
-    /wireguard_latest_handshake_seconds\{[^\n]+name="Offline"\} 0/
+    /wireguard_latest_handshake_seconds\{[^\n]+name="Offline"[^}]*\} 0/
   );
   expect(text).toContain('Seconds since the last handshake');
   expect(text).not.toContain('999');

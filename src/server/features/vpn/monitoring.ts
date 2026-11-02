@@ -56,6 +56,7 @@ export async function prometheus() {
       ipv4Address: client.ipv4Address,
       ipv6Address: client.ipv6Address,
       name: client.name,
+      owner: client.user.name,
     });
 
     wireguardSentBytes.push(
@@ -71,7 +72,9 @@ export async function prometheus() {
     if (client.endpoint) {
       const endpointId = formatPrometheusLabels({
         interface: interfaceName,
+        ipv4Address: client.ipv4Address,
         name: client.name,
+        owner: client.user.name,
         endpoint: client.endpoint,
       });
       wireguardEndpointInfo.push(

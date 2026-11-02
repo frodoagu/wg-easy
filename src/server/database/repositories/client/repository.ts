@@ -90,7 +90,7 @@ export class ClientRepository {
    */
   async getAllPublic() {
     const result = await this.db.query.client.findMany({
-      with: { oneTimeLink: true },
+      with: { oneTimeLink: true, user: { columns: { name: true } } },
       columns: publicColumns,
       orderBy: (t, { asc }) => asc(t.name),
     });
