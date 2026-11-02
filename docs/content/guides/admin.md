@@ -9,7 +9,9 @@ Open the user menu in the top-right corner and select **Admin Panel**. Choose **
 - **Session Timeout**: Duration in seconds for the login cookie when **Remember me** is selected.
 - **Metrics → Password**: Optional bearer password shared by the metrics endpoints. Enter a password or an Argon2 hash. Requests must send the original password as `Authorization: Bearer <password>`. Leaving this empty allows access without authentication when an endpoint is enabled.
 - **Prometheus**: Enable `/metrics/prometheus`. See the [Prometheus guide](../advanced/metrics/prometheus.md) for a scrape configuration.
-- **JSON**: Enable `/metrics/json` for peer counts and per-client connection and traffic statistics.
+- **JSON**: Enable `/metrics/json` for peer counts and per-client connection and traffic statistics. Each client includes its owner's username as `owner` and display name as `ownerName`.
+
+The metrics endpoints include every client, regardless of which user owns it.
 
 ## Client Configuration
 

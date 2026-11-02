@@ -4,9 +4,16 @@ title: Clients
 
 The **Clients** page is the home page after signing in. It lets you create devices, monitor their connections, share configurations, and manage VPN access.
 
+## Users and Ownership
+
+Each client belongs to the user that created it. Clients imported during a [migration](../advanced/migrate/index.md) belong to the administrator created during setup.
+
+- **Admins** see and manage all clients and can change every setting.
+- **Other users**, such as users [registered through OAuth](../advanced/config/external-authentication.md#auto-register), only see and manage their own clients. They cannot change a client's addresses, [Allowed IPs](#allowed-ips), [Server Allowed IPs](#server-allowed-ips), or [Firewall Allowed IPs](#firewall-allowed-ips), because these affect other clients and the server. Addresses are shown read-only and the other fields are hidden.
+
 ## Client List
 
-Each client card shows its name, VPN address, connection status, last handshake, expiration, and upload/download statistics. Use the chart button in the header to show or hide traffic charts. The list updates automatically.
+Each client card shows its name, VPN address, connection status, last handshake, expiration, and upload/download statistics. Admins also see the name of the user that owns the client. Use the chart button in the header to show or hide traffic charts. The list updates automatically.
 
 - **Enabled** means the client is allowed to connect. The switch on the card saves immediately.
 - **Online** means an enabled client has completed a handshake within the last 10 minutes. This is based on handshake activity, not a continuous connectivity check.
@@ -17,8 +24,9 @@ Each client card shows its name, VPN address, connection status, last handshake,
 - **Search clients** matches names, IPv4 addresses, and IPv6 addresses across the whole list.
 - **Status** filters by enabled, disabled, online, or offline clients.
 - **Expiry** filters by **Never expires**, **Expires in 7 days**, or **Expired**. The seven-day filter includes future expirations within the next seven days.
+- **User** shows only the clients owned by the selected user. This filter is only available to admins.
 - **Sort by** orders clients by name, creation time, IPv4 address, or expiration in either direction. Clients without an expiration appear last when sorting by expiry.
-- **Clear filters** resets the search, status, and expiry filters.
+- **Clear filters** resets the search, status, expiry, and user filters.
 
 Use **Previous** and **Next** below the list to move between pages. **Per page** offers 10, 25, 50, or 100 clients; the default is 25. Changing a search, filter, sort order, or page size returns to the first page. The count reflects the clients matching your search and filters.
 

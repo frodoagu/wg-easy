@@ -79,3 +79,9 @@ The Endpoints are not yet documented. But as file-based routing is used, you can
 | ------------------------------------ | -------------- | ------ |
 | `src/server/api/client/index.get.ts` | `/api/client`  | GET    |
 | `src/server/api/setup/2.post.ts`     | `/api/setup/2` | POST   |
+
+### Users and Clients
+
+`GET /api/client` only returns the clients owned by the signed-in user, unless the user is an admin. Admins can pass `userId` to only return the clients of one user, e.g. `/api/client?userId=2`. Each client includes its owner as `user` with `id`, `name`, and `username`.
+
+Admins can list all users with `GET /api/admin/users`.

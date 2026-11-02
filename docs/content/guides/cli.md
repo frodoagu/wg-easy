@@ -44,7 +44,7 @@ This will reset the password for the admin user to the new password you provided
 
 ### Show Clients
 
-List all clients that are currently configured with details such as client ID, Name, Public Key, and enabled status.
+List all clients that are currently configured with details such as client ID, Name, Public Key, enabled status, and the username of the user that owns the client.
 
 ```shell
 cli clients:list
