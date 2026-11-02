@@ -32,13 +32,23 @@ When enabled:
 
 - If a user logs in with an email address that is already registered, their account will be linked to the OAuth provider (if not already linked), regardless of the value of `OAUTH_AUTO_REGISTER`.
 
-/// warning | Security
+Auto-registered users are created without admin permissions. They can only see and manage the clients they created themselves, and cannot change a client's addresses, Allowed IPs, Server Allowed IPs or Firewall IPs.
 
-Users will be created with Admin Permissions, as the permissions system is not yet implemented. Only enable this if you trust all users that can log in with the OAuth provider.
+Use [Allowed Domains](#allowed-domains) to restrict which users can log in and [Admin Emails](#admin-emails) to give users admin permissions.
 
-Use [Allowed Domains](#allowed-domains) to restrict which users can log in.
+### Admin Emails
 
-///
+To give OAuth users admin permissions, set the following environment variable to their email addresses:
+
+| Env                  | Required | Default | Description                         |
+| -------------------- | -------- | ------- | ----------------------------------- |
+| `OAUTH_ADMIN_EMAILS` | :x:      | -       | Emails of users with the admin role |
+
+You can list multiple emails by separating them with a comma:
+
+e.g. `alice@example.com,bob@example.com`
+
+When set, the role of users without a password is updated every time they log in with an OAuth provider: listed users become admins and all other users lose admin permissions. Users with a password, such as the administrator created during setup, keep their role.
 
 ### Allowed Domains
 

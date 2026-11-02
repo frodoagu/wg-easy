@@ -59,16 +59,30 @@
           </FormGroup>
           <FormGroup>
             <FormHeading>{{ $t('clients.fields.address.label') }}</FormHeading>
-            <FormTextField
-              id="ipv4Address"
-              v-model="data.ipv4Address"
-              label="IPv4"
-            />
-            <FormTextField
-              id="ipv6Address"
-              v-model="data.ipv6Address"
-              label="IPv6"
-            />
+            <template v-if="isAdmin">
+              <FormTextField
+                id="ipv4Address"
+                v-model="data.ipv4Address"
+                label="IPv4"
+              />
+              <FormTextField
+                id="ipv6Address"
+                v-model="data.ipv6Address"
+                label="IPv6"
+              />
+            </template>
+            <template v-else>
+              <FormInfoField
+                id="ipv4Address"
+                :data="data.ipv4Address"
+                label="IPv4"
+              />
+              <FormInfoField
+                id="ipv6Address"
+                :data="data.ipv6Address"
+                label="IPv6"
+              />
+            </template>
             <FormInfoField
               id="endpoint"
               :data="data.endpoint ?? $t('clients.status.notConnected')"
@@ -76,7 +90,7 @@
               :description="$t('clients.fields.endpoint.description')"
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup v-if="isAdmin">
             <FormHeading
               :description="$t('clients.fields.allowedIps.description')"
             >
@@ -84,7 +98,7 @@
             </FormHeading>
             <FormNullArrayField v-model="data.allowedIps" name="allowedIps" />
           </FormGroup>
-          <FormGroup>
+          <FormGroup v-if="isAdmin">
             <FormHeading
               :description="$t('clients.fields.serverAllowedIps.description')"
             >
@@ -95,7 +109,7 @@
               name="serverAllowedIps"
             />
           </FormGroup>
-          <FormGroup v-if="globalStore.information?.firewallEnabled">
+          <FormGroup v-if="isAdmin && globalStore.information?.firewallEnabled">
             <FormHeading
               :description="$t('clients.fields.firewallIps.description')"
             >
@@ -326,6 +340,11 @@ import { CircleArrowLeftIcon } from '@lucide/vue';
 import { $fetch } from '#imports';
 
 const globalStore = useGlobalStore();
+const authStore = useAuthStore();
+const isAdmin = computed(
+  () =>
+    !!authStore.userData && hasPermissions(authStore.userData, 'admin', 'any')
+);
 
 const route = useRoute();
 const id = Number(route.params.id);

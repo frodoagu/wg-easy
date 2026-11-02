@@ -20,6 +20,7 @@ import type {
 } from '#shared/contracts/client';
 import type { UserConfigType } from '#db/repositories/userConfig/types';
 import { nextIP } from '#server/utils/ip';
+import { roles } from '#shared/utils/permissions';
 
 type ClientAction =
   | ClientBulkType['action']
@@ -58,8 +59,7 @@ export async function create(actor: Actor, data: ClientCreateType) {
     const [created] = await tx.clients.insert({
       ...clientDefaults(config),
       ...data,
-      // Preserve existing ownership until user assignment is introduced.
-      userId: 1,
+      userId: actor.id,
       interfaceId: network.name,
       privateKey,
       publicKey,
@@ -80,6 +80,19 @@ export async function update(
   await commit(async (tx) => {
     authorizeClient(actor, 'update', await tx.clients.getPublic(clientId));
     assertClientEnabled(data.enabled, data.expiresAt);
+    if (actor.role !== roles.ADMIN) {
+      // Addresses and routed or firewalled ranges affect other peers.
+      const {
+        ipv4Address: _ipv4Address,
+        ipv6Address: _ipv6Address,
+        allowedIps: _allowedIps,
+        serverAllowedIps: _serverAllowedIps,
+        firewallIps: _firewallIps,
+        ...settings
+      } = data;
+      await tx.clients.update(clientId, settings);
+      return;
+    }
     const addresses = assertClientAddresses(
       data,
       await tx.interfaces.get(),

@@ -295,14 +295,15 @@ describe('client creation and settings', () => {
     expect(writeFile).toHaveBeenCalledOnce();
   });
 
-  test('rejects client creation by a non-administrator before generating keys', async () => {
-    getCurrentUser.mockResolvedValue({ id: 2, role: 2 });
-    await expect(
-      createClientRoute(clientEvent(1, { name: 'New client', expiresAt: null }))
-    ).rejects.toMatchObject({ status: 403 });
-    expect(await clients.get(4)).toBeUndefined();
-    expect(exec).not.toHaveBeenCalled();
-    expect(writeFile).not.toHaveBeenCalled();
+  test.each([
+    [1, 1],
+    [2, 2],
+  ])('assigns a client created by user %i to that user', async (id, role) => {
+    getCurrentUser.mockResolvedValue({ id, role });
+    const { clientId } = await createClientRoute(
+      clientEvent(1, { name: 'New client', expiresAt: null })
+    );
+    expect((await clients.get(clientId))?.userId).toBe(id);
   });
 
   async function settings() {
@@ -327,6 +328,30 @@ describe('client creation and settings', () => {
       '# Client: Renamed (1)'
     );
     expect(writeFile).toHaveBeenCalledOnce();
+  });
+
+  test('ignores network changes by a non-administrator owner', async () => {
+    getCurrentUser.mockResolvedValue({ id: 2, role: 2 });
+    const before = await clients.get(1);
+    await updateClient(
+      clientEvent(1, {
+        ...before,
+        name: 'Renamed',
+        ipv4Address: '10.8.0.99',
+        ipv6Address: 'fdcc:ad94:bacf:61a4::cafe:99',
+        allowedIps: ['0.0.0.0/0'],
+        serverAllowedIps: ['192.168.1.0/24'],
+        firewallIps: ['0.0.0.0/0'],
+      })
+    );
+    expect(await clients.get(1)).toMatchObject({
+      name: 'Renamed',
+      ipv4Address: before?.ipv4Address,
+      ipv6Address: before?.ipv6Address,
+      allowedIps: before?.allowedIps,
+      serverAllowedIps: before?.serverAllowedIps,
+      firewallIps: before?.firewallIps,
+    });
   });
 
   test('rejects unauthorized settings changes', async () => {

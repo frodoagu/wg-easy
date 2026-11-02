@@ -11,7 +11,11 @@ vi.mock('#server/utils/config', () => ({ WG_ENV: {} }));
 const actor = { id: 1, role: roles.ADMIN };
 
 async function fixture(
-  options: { passwordEnabled?: boolean; oauthAutoRegister?: boolean } = {}
+  options: {
+    passwordEnabled?: boolean;
+    oauthAutoRegister?: boolean;
+    oauthAdminEmails?: string[];
+  } = {}
 ) {
   const { store } = await databaseFixture();
   const crypto = resetCryptoMocks();
@@ -27,6 +31,7 @@ async function fixture(
   });
   WG_ENV.DISABLE_PASSWORD_AUTH = options.passwordEnabled === false;
   WG_ENV.OAUTH_AUTO_REGISTER = options.oauthAutoRegister ?? false;
+  WG_ENV.OAUTH_ADMIN_EMAILS = options.oauthAdminEmails;
   const clock = vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
   onTestFinished(() => clock.mockRestore());
   return { store, crypto };
@@ -241,7 +246,11 @@ describe('identity', () => {
       if (oauthAutoRegister) {
         expect(result).toMatchObject({
           success: true,
-          user: { username: 'new-user', role: roles.ADMIN, hasPassword: false },
+          user: {
+            username: 'new-user',
+            role: roles.CLIENT,
+            hasPassword: false,
+          },
         });
         expect(await store.users.count()).toBe(2);
       } else {
@@ -253,6 +262,42 @@ describe('identity', () => {
       }
     }
   );
+
+  test('assigns the admin role from OAUTH_ADMIN_EMAILS on every OAuth login', async () => {
+    const { store } = await fixture({
+      oauthAutoRegister: true,
+      oauthAdminEmails: ['boss@example.com'],
+    });
+    const login = (subject: string, email: string) =>
+      identity.loginWithOAuth('oidc', subject, subject, email, subject);
+
+    expect(await login('boss', 'Boss@example.com')).toMatchObject({
+      user: { role: roles.ADMIN },
+    });
+    expect(await login('user', 'user@example.com')).toMatchObject({
+      user: { role: roles.CLIENT },
+    });
+
+    // Previously auto-registered admins are demoted when not listed.
+    const user = await store.users.getByOAuth('oidc', 'user');
+    await store.users.update(user!.id, { role: roles.ADMIN });
+    expect(await login('user', 'user@example.com')).toMatchObject({
+      user: { role: roles.CLIENT },
+    });
+    expect((await store.users.get(user!.id))?.role).toBe(roles.CLIENT);
+
+    // Password users keep their role.
+    await identity.linkOauth(actor, 'github', 'admin');
+    expect(
+      await identity.loginWithOAuth(
+        'github',
+        'admin',
+        'admin',
+        'admin@example.com',
+        'Admin'
+      )
+    ).toMatchObject({ user: { role: roles.ADMIN } });
+  });
 
   test('allocates an available OAuth username without linking or changing its current owner', async () => {
     const { store } = await fixture({ oauthAutoRegister: true });

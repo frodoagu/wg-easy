@@ -5,6 +5,7 @@ import { hashPassword, isPasswordValid } from '#server/utils/password';
 import { createTotp, verifyTotpCode } from '#server/utils/totp';
 import { getDatabase } from '#db';
 import type { UserType } from '#db/repositories/user/types';
+import type { UserRepository } from '#db/repositories/user/repository';
 import type {
   Actor,
   OAuthProvider,
@@ -134,6 +135,31 @@ export function login(
   });
 }
 
+function oauthRole(email: string) {
+  return WG_ENV.OAUTH_ADMIN_EMAILS?.includes(email.toLowerCase())
+    ? roles.ADMIN
+    : roles.CLIENT;
+}
+
+/**
+ * Password users keep their role so the setup administrator cannot be locked
+ * out. OAuth-only users follow `OAUTH_ADMIN_EMAILS` when it is configured.
+ */
+async function syncOAuthRole(
+  users: UserRepository,
+  user: UserType,
+  email: string
+) {
+  if (user.password !== null || !WG_ENV.OAUTH_ADMIN_EMAILS) {
+    return user;
+  }
+  const role = oauthRole(email);
+  if (role !== user.role) {
+    await users.update(user.id, { role });
+  }
+  return { ...user, role };
+}
+
 export function loginWithOAuth(
   provider: OAuthProvider,
   oauthId: string,
@@ -147,7 +173,11 @@ export function loginWithOAuth(
       if (!linked.enabled) {
         return { success: false, error: 'USER_DISABLED' };
       }
-      return authenticated(linked, 'oauth', false);
+      return authenticated(
+        await syncOAuthRole(users, linked, email),
+        'oauth',
+        false
+      );
     }
     const existing = await users.getByEmail(email);
     if (existing) {
@@ -159,7 +189,11 @@ export function loginWithOAuth(
       }
       await users.update(existing.id, { oauthProvider: provider, oauthId });
       return authenticated(
-        { ...existing, oauthProvider: provider, oauthId },
+        await syncOAuthRole(
+          users,
+          { ...existing, oauthProvider: provider, oauthId },
+          email
+        ),
         'oauth',
         false
       );
@@ -180,7 +214,7 @@ export function loginWithOAuth(
       password: null,
       email,
       name,
-      role: roles.ADMIN,
+      role: oauthRole(email),
       totpVerified: false,
       enabled: true,
       oauthProvider: provider,

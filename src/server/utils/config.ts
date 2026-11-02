@@ -129,6 +129,10 @@ export const WG_ENV = {
   OAUTH_ALLOWED_DOMAINS: process.env.OAUTH_ALLOWED_DOMAINS?.split(',').map(
     (v) => v.trim()
   ),
+  /** Emails of OAuth users that are given the admin role */
+  OAUTH_ADMIN_EMAILS: process.env.OAUTH_ADMIN_EMAILS?.split(',')
+    .map((v) => v.trim().toLowerCase())
+    .filter((v) => v.length > 0),
   /** Automatically register users that log in with an OAuth provider */
   OAUTH_AUTO_REGISTER: process.env.OAUTH_AUTO_REGISTER === 'true',
   /** Which OAuth provider to automatically launch */
@@ -145,6 +149,7 @@ if (WG_ENV.OAUTH_PROVIDERS && WG_ENV.OAUTH_PROVIDERS.length > 0) {
 Enabled OAuth providers: ${WG_ENV.OAUTH_PROVIDERS.join(', ')}
 Allowed OAuth domains: ${WG_ENV.OAUTH_ALLOWED_DOMAINS?.join(', ') ?? 'All'}
 OAuth auto register: ${WG_ENV.OAUTH_AUTO_REGISTER ? 'Enabled' : 'Disabled'}
+OAuth admins: ${WG_ENV.OAUTH_ADMIN_EMAILS?.join(', ') ?? 'None'}
 Password authentication: ${WG_ENV.DISABLE_PASSWORD_AUTH ? 'Disabled' : 'Enabled'}
 Auto launch OAuth provider: ${WG_ENV.OAUTH_AUTO_LAUNCH ?? 'None'}
 `);
